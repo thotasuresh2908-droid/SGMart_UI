@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   // VITE_DEV_BACKEND=https://sgmart-backend.onrender.com in .env.local
   // (Google sign-in then needs the deployed site; guest shopping and orders work locally).
   const backend = env.VITE_DEV_BACKEND || 'http://localhost:9001'
-  const remote = backend.startsWith('https://')
+  const remote = backend.startsWith('https://sgmart-backend.onrender.com')
   const forward = { target: backend, changeOrigin: remote, secure: true }
 
   return {
