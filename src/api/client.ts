@@ -31,7 +31,7 @@ export class ApiError extends Error {
  * Never put the backend's full https address here: cookies and CSRF would stop working.
  */
 export const api = axios.create({
-  baseURL: '/api/v1',
+  baseURL: 'https://sgmart-backend.onrender.com',
   withCredentials: true,
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-XSRF-TOKEN',
