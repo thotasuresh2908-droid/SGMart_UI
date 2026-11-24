@@ -482,3 +482,15 @@ button:disabled{cursor:not-allowed;opacity:.6}
 .datefilter input{border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--surface)}
 .pager{display:flex;justify-content:center;gap:10px;align-items:center}
 @media (max-width:760px){.soundbtn{display:none}.topbar .spacer{display:none}}
+.modalgrid{grid-template-columns:1fr 1fr!important}
+.modalgrid .span2{grid-column:1/-1}
+.price-prev.span3,.fgrid .span3{grid-column:1/-1}
+.fgrid .actions.span3{justify-content:flex-start}
+.pcard.inactive{opacity:.6}
+.danger-link{color:var(--danger)!important}
+.accountform{display:flex;flex-direction:column;gap:12px}
+/* Shop footer with the staff link */
+.wrap{padding-bottom:32px}
+.sitefoot{max-width:1240px;margin:0 auto;padding:16px 24px calc(96px + env(safe-area-inset-bottom,0px));display:flex;gap:18px;flex-wrap:wrap;justify-content:center;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px}
+.sitefoot a{color:var(--muted)}
+.sitefoot a:hover{color:var(--brand)}
