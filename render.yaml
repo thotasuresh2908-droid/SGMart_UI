@@ -1,0 +1,32 @@
+# Render Blueprint for the SGMart web app (static site).
+# Render: New > Blueprint > pick this repo. Or create a Static Site by hand with the same values.
+#
+# The rewrite rules forward API calls and Google sign-in to the backend, so the browser
+# only ever talks to this site's address (cookies and CSRF work, no CORS needed).
+# Rules run top to bottom; the last one makes page refreshes on /orders, /admin/... work.
+services:
+  - type: web
+    runtime: static
+    name: sgmart-web
+    # If this web app lives in a sub-folder of the repo (e.g. sgmart-web/), uncomment:
+    # rootDir: sgmart-web
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_LIVE_UPDATES
+        value: "off"
+      - key: VITE_TURNSTILE_SITE_KEY
+        sync: false
+    routes:
+      - type: rewrite
+        source: /api/*
+        destination: https://sgmart-backend.onrender.com/api/*
+      - type: rewrite
+        source: /oauth2/*
+        destination: https://sgmart-backend.onrender.com/oauth2/*
+      - type: rewrite
+        source: /login/oauth2/*
+        destination: https://sgmart-backend.onrender.com/login/oauth2/*
+      - type: rewrite
+        source: /*
+        destination: /index.html
