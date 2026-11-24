@@ -9,6 +9,13 @@ export interface LiveSubscription {
   token?: string | null
 }
 
+/**
+ * Live updates need WebSockets on the same address as the web app. A Render static site can
+ * forward normal requests to the backend but not WebSockets, so there set VITE_LIVE_UPDATES=off:
+ * screens then refresh every 15 seconds instead (the same fallback used when a connection drops).
+ */
+export const liveEnabled = (import.meta.env.VITE_LIVE_UPDATES ?? 'on') !== 'off'
+
 function brokerUrl(): string {
   const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
   return `${scheme}://${window.location.host}/ws`
@@ -26,7 +33,7 @@ export function useLiveUpdates(subscriptions: LiveSubscription[], onMessage: (m:
   const key = subscriptions.map((s) => `${s.topic}|${s.token ?? ''}`).sort().join(',')
 
   useEffect(() => {
-    if (subscriptions.length === 0 || typeof WebSocket === 'undefined') return undefined
+    if (!liveEnabled || subscriptions.length === 0 || typeof WebSocket === 'undefined') return undefined
     const client = new Client({
       brokerURL: brokerUrl(),
       reconnectDelay: 5000,
