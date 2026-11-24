@@ -5,7 +5,7 @@ import { getAdminMe, getOrderCounts } from '../api/admin'
 import { logout } from '../api/shop'
 import { Logo } from '../components/Logo'
 import { initials, phone } from '../lib/format'
-import { useLiveUpdates } from '../lib/live'
+import { liveEnabled, useLiveUpdates } from '../lib/live'
 import { readJson, writeJson } from '../lib/storage'
 import { useSession, useStore } from '../state/session'
 import { useToast } from '../state/toast'
@@ -83,7 +83,7 @@ export function AdminLayout() {
         <Logo />
         <span className="admintag">Store admin</span>
         <span className="spacer" />
-        <span className={`livedot${connected ? ' on' : ''}`}>{connected ? 'Live' : 'Reconnecting…'}</span>
+        <span className={`livedot${connected ? ' on' : ''}`}>{connected ? 'Live' : liveEnabled ? 'Reconnecting…' : 'Auto-refresh every 15 s'}</span>
         <button type="button" className="ghost soundbtn" onClick={toggleSound} aria-pressed={soundOn}>
           {soundOn ? '🔔 Sound on' : '🔕 Sound off'}
         </button>
