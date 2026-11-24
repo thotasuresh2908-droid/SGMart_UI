@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { acceptOrder, dispatchOrder, verifyCustomer } from '../api/admin'
+import { acceptOrder, dispatchOrder, unblockCustomer, verifyCustomer } from '../api/admin'
 import { ApiError } from '../api/client'
 import type { AdminOrderView, PartnerView } from '../api/types'
 import { CallButton } from '../components/CallButton'
@@ -11,6 +11,7 @@ import { deliveryFee } from '../state/cartLogic'
 import { useStore } from '../state/session'
 import { useToast } from '../state/toast'
 import { ADMIN_STATUS, UNAVAILABLE_REASONS, VEHICLE } from './adminLabels'
+import { BlockModal } from './BlockModal'
 import { DeliverModal } from './DeliverModal'
 import { RejectModal } from './RejectModal'
 
@@ -32,6 +33,7 @@ export function AdminOrderCard({ view, partners, adminName, now }: Props) {
   const [partnerId, setPartnerId] = useState<number | ''>('')
   const [rejecting, setRejecting] = useState(false)
   const [delivering, setDelivering] = useState(false)
+  const [blocking, setBlocking] = useState(false)
 
   const refresh = () => void queryClient.invalidateQueries({ queryKey: ['admin'] })
   const onError = (e: Error) => {
@@ -55,6 +57,10 @@ export function AdminOrderCard({ view, partners, adminName, now }: Props) {
       refresh()
     },
     onError,
+  })
+  const unblock = useMutation({
+    mutationFn: () => unblockCustomer(c!.id),
+    onSuccess: () => { toast(`${phone(o.customerMobile)} can order again`); refresh() },
   })
   const verify = useMutation({
     mutationFn: () => verifyCustomer(c!.id),
@@ -109,7 +115,14 @@ export function AdminOrderCard({ view, partners, adminName, now }: Props) {
             ) : null}
           </p>
           <p><a href={`tel:${o.customerMobile}`}>{phone(o.customerMobile)}</a></p>
-          <div className="callrow"><CallButton mobile={o.customerMobile} label="Call customer" /></div>
+          <div className="callrow">
+            <CallButton mobile={o.customerMobile} label="Call customer" />
+            {c ? (
+              c.blocked
+                ? <button type="button" className="linkbtn small" onClick={() => unblock.mutate()} disabled={unblock.isPending}>Unblock number</button>
+                : <button type="button" className="linkbtn small danger-link" onClick={() => setBlocking(true)}>Block number</button>
+            ) : null}
+          </div>
           <p>{o.addressLine}</p>
           {o.landmark ? <p className="muted small">Landmark: {o.landmark}</p> : null}
           {o.latitude != null && o.longitude != null ? (
@@ -270,6 +283,7 @@ export function AdminOrderCard({ view, partners, adminName, now }: Props) {
       ) : null}
 
       {rejecting ? <RejectModal orderNo={o.orderNo} onClose={() => setRejecting(false)} /> : null}
+      {blocking && c ? <BlockModal customerId={c.id} name={o.customerName} mobile={o.customerMobile} onClose={() => setBlocking(false)} /> : null}
       {delivering ? <DeliverModal order={o} partners={partners} adminName={adminName} onClose={() => setDelivering(false)} /> : null}
     </article>
   )

@@ -8,4 +8,5 @@ npm run dev        # http://localhost:5173 (backend must run on :8080)
 npm test           # unit and component tests
 npm run build      # production build in dist/
 ```
-BACKENd USING url # https://sgmart-backend.onrender.com
+
+Backend: https://sgmart-backend.onrender.com (reached through the rewrite rules in vercel.json / render.yaml)

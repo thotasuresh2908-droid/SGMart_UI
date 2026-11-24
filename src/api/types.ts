@@ -239,3 +239,191 @@ export interface DeliverRequest {
   collectedByPartnerId: number
   upiRef?: string | null
 }
+
+/* ------------------------------------------------ admin: products and stock */
+
+export type StockStatus = 'IN_SHOP' | 'LOW_STOCK' | 'OUT_OF_STOCK' | 'HIDDEN'
+export type StockReason =
+  | 'RECEIVED' | 'SHELF_COUNT' | 'DAMAGED' | 'CORRECTION' | 'NEW_PRODUCT'
+  | 'ORDER_PLACED' | 'ORDER_EDITED' | 'ITEM_UNAVAILABLE' | 'ORDER_CANCELLED' | 'ORDER_REJECTED'
+
+export interface AdminProduct {
+  id: number
+  categoryId: number
+  categoryName: string
+  name: string
+  unit: string
+  price: number
+  mrp: number
+  discountPercent: number | null
+  stockQty: number
+  status: StockStatus
+  active: boolean
+  icon: string
+  imageUrl: string | null
+  updatedAt: string
+}
+
+export interface ProductRequest {
+  name: string
+  categoryId: number
+  unit: string
+  price: number
+  mrp: number | null
+  icon: string
+}
+
+export interface CreateProductRequest extends ProductRequest {
+  stockQty: number
+}
+
+export interface UpdateProductRequest extends ProductRequest {
+  active: boolean
+}
+
+export interface StockUpdateRequest {
+  mode: 'ADD' | 'SET'
+  qty: number
+  reason?: 'SHELF_COUNT' | 'DAMAGED' | 'CORRECTION'
+}
+
+export interface StockChangeResult {
+  productId: number
+  productName: string
+  stockBefore: number
+  stockAfter: number
+  changed: boolean
+  status: StockStatus
+}
+
+export interface StockReport {
+  date: string
+  summary: {
+    productsInShop: number
+    liveProducts: number
+    unitsAvailable: number
+    unitsAdded: number
+    productsRestocked: number
+    unitsDelivered: number
+    ordersDelivered: number
+    outOfStock: number
+    lowStock: number
+  }
+  products: {
+    productId: number
+    name: string
+    unit: string
+    icon: string
+    imageUrl: string | null
+    startOfDay: number
+    added: number
+    removed: number
+    ordered: number
+    delivered: number
+    available: number
+    status: StockStatus
+  }[]
+  restockLog: {
+    at: string
+    productId: number
+    name: string
+    unit: string
+    icon: string
+    imageUrl: string | null
+    change: number
+    stockAfter: number
+    reason: StockReason
+    note: string | null
+    addedBy: string
+  }[]
+  partners: {
+    partnerId: number
+    name: string
+    mobile: string
+    vehicleType: VehicleType
+    deliveries: number
+    units: number
+    amount: number
+  }[]
+  deliveries: {
+    deliveredAt: string
+    orderNo: string
+    customerName: string
+    customerMobile: string
+    units: number
+    items: string | null
+    partnerId: number | null
+    partnerName: string | null
+    partnerMobile: string | null
+    minutesTaken: number
+    amount: number
+  }[]
+}
+
+/* ------------------------------------------------ admin: payments */
+
+export interface DueOrder {
+  orderNo: string
+  customerName: string
+  customerMobile: string
+  status: OrderStatus
+  paymentMethod: PaymentMethod
+  amountDue: number
+  partnerId: number | null
+  partnerName: string | null
+  partnerMobile: string | null
+}
+
+export interface PaymentReport {
+  date: string | null
+  totals: {
+    payments: number
+    collected: number
+    cash: number
+    upi: number
+    averageBill: number | null
+    stillToCollect: number
+    activeOrders: number
+  }
+  byPartner: {
+    partnerId: number
+    name: string
+    mobile: string
+    vehicleType: VehicleType
+    status: PartnerStatus
+    deliveries: number
+    cashToHandOver: number
+    upi: number
+    onTheWay: DueOrder[]
+  }[]
+  stillToCollect: DueOrder[]
+  records: {
+    at: string
+    orderNo: string
+    paidBy: string
+    method: PaymentMode
+    upiRef: string | null
+    amount: number
+    collectedBy: string
+    confirmedBy: string
+  }[]
+}
+
+/* ------------------------------------------------ admin: partners, settings, users */
+
+export interface PartnerRequest {
+  name: string
+  mobile: string
+  vehicleType: VehicleType
+}
+
+export interface UpdateStoreRequest {
+  storeName: string
+  phone: string
+  opensAt: string
+  closesAt: string
+  etaMinutes: number
+  deliveryFee: number
+  freeDeliveryMin: number
+  firstOrderCodLimit: number | null
+}

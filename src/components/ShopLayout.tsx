@@ -5,7 +5,7 @@ import { useDeliveryLocation } from '../state/location'
 import { useUi } from '../state/ui'
 import { CartBar } from './CartBar'
 import { CartDrawer } from './CartDrawer'
-
+import { Footer } from './Footer'
 import { Header } from './Header'
 import { LocationModal } from './LocationModal'
 import { LoginModal } from './LoginModal'
@@ -27,7 +27,7 @@ export function ShopLayout() {
     <>
       <Header />
       <Outlet />
-  
+      <Footer />
       <CartDrawer />
       <CartBar />
       {ui.panel === 'login' ? <LoginModal onClose={ui.close} /> : null}
