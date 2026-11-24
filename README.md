@@ -8,3 +8,4 @@ npm run dev        # http://localhost:5173 (backend must run on :8080)
 npm test           # unit and component tests
 npm run build      # production build in dist/
 ```
+BACKENd USING url # https://sgmart-backend.onrender.com
