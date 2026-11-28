@@ -1,5 +1,6 @@
 import { Client, type IMessage } from '@stomp/stompjs'
 import { useEffect, useRef, useState } from 'react'
+import { BACKEND_URL } from '../api/config'
 import type { LiveOrderMessage } from '../api/types'
 
 export interface LiveSubscription {
@@ -17,8 +18,9 @@ export interface LiveSubscription {
 export const liveEnabled = (import.meta.env.VITE_LIVE_UPDATES ?? 'on') !== 'off'
 
 function brokerUrl(): string {
-  const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${scheme}://${window.location.host}/ws`
+  // Same address as the web app, or the backend's own address when the app calls it directly.
+  const base = BACKEND_URL || window.location.origin
+  return `${base.replace(/^http/, 'ws')}/ws`
 }
 
 /**
