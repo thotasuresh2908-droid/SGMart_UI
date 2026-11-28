@@ -1,5 +1,5 @@
-
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
+import { API_BASE } from './config'
 
 export interface ApiErrorBody {
   code: string
@@ -26,21 +26,65 @@ export class ApiError extends Error {
   }
 }
 
+const CSRF_COOKIE = 'XSRF-TOKEN'
+const CSRF_HEADER = 'X-XSRF-TOKEN'
+
 /**
  * Common API configuration.
- * All API requests use the Render backend.
+ * withCredentials sends the login session cookie. Every POST, PUT and DELETE also carries a
+ * CSRF token (see the interceptors below).
  */
 export const api = axios.create({
-  baseURL: 'https://sgmart-backend.onrender.com/api/v1',
+  baseURL: API_BASE,
   withCredentials: true,
-
-  xsrfCookieName: 'XSRF-TOKEN',
-  xsrfHeaderName: 'X-XSRF-TOKEN',
-
-  // Enable XSRF header handling for cross-origin requests.
-  withXSRFToken: true,
-
+  xsrfCookieName: CSRF_COOKIE,
+  xsrfHeaderName: CSRF_HEADER,
+  // The token is attached by the request interceptor below.
+  withXSRFToken: false,
   timeout: 90000,
+})
+
+/* ---------------------------------------------------------------- CSRF token */
+
+let csrfToken: string | null = null
+let csrfLoading: Promise<string | null> | null = null
+
+/** The XSRF-TOKEN cookie, when the browser lets this page read it (web app and API on one address). */
+function readCsrfCookie(): string | null {
+  if (typeof document === 'undefined') return null
+  const found = document.cookie.split('; ').find((c) => c.startsWith(`${CSRF_COOKIE}=`))
+  return found ? decodeURIComponent(found.slice(CSRF_COOKIE.length + 1)) : null
+}
+
+/**
+ * When the web app (Vercel) and the API (Render) are on different addresses the browser hides the
+ * API's XSRF-TOKEN cookie from this page, so ask the API for the token. The same call makes the
+ * browser store the matching cookie, which it sends back with the header.
+ */
+function loadCsrfToken(): Promise<string | null> {
+  if (csrfToken) return Promise.resolve(csrfToken)
+  if (!csrfLoading) {
+    csrfLoading = axios
+      .get<{ token?: string | null }>(`${API_BASE}/auth/csrf`, { withCredentials: true, timeout: 90000 })
+      .then((r) => {
+        csrfToken = r.data.token ?? null
+        return csrfToken
+      })
+      .finally(() => {
+        csrfLoading = null
+      })
+  }
+  return csrfLoading
+}
+
+const SAFE_METHODS = ['get', 'head', 'options', 'trace']
+
+api.interceptors.request.use(async (config) => {
+  if (!SAFE_METHODS.includes((config.method ?? 'get').toLowerCase())) {
+    const token = readCsrfCookie() ?? (await loadCsrfToken())
+    if (token) config.headers.set(CSRF_HEADER, token)
+  }
+  return config
 })
 
 const WAKING_UP =
@@ -111,7 +155,22 @@ export function toApiError(error: unknown): ApiError {
   )
 }
 
+type RetryableConfig = InternalAxiosRequestConfig & { _csrfRetried?: boolean }
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(toApiError(error)),
+  (error) => {
+    // The token went stale (sign-in, sign-out or an expired session rotate it):
+    // forget it, fetch a fresh one and send the same request once more.
+    if (axios.isAxiosError(error) && error.response?.status === 403 && error.config) {
+      const body = error.response.data as ApiErrorBody | undefined
+      const config = error.config as RetryableConfig
+      if (body?.code === 'CSRF_INVALID' && !config._csrfRetried) {
+        config._csrfRetried = true
+        csrfToken = null
+        return api.request(config)
+      }
+    }
+    return Promise.reject(toApiError(error))
+  },
 )
