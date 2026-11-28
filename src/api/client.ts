@@ -1,3 +1,4 @@
+ 
 import axios, { AxiosError } from 'axios'
 
 /** The one error shape the backend returns: { code, message, field }. */
@@ -13,7 +14,12 @@ export class ApiError extends Error {
   readonly code: string
   readonly field: string | null
 
-  constructor(status: number, code: string, message: string, field: string | null = null) {
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    field: string | null = null,
+  ) {
     super(message)
     this.name = 'ApiError'
     this.status = status
@@ -23,53 +29,95 @@ export class ApiError extends Error {
 }
 
 /**
- * Always a relative URL, so the browser only ever talks to the web app's own address:
- *  - local development: Vite forwards /api to the backend (vite.config.ts)
- *  - Render static site: rewrite rules forward /api to the backend (render.yaml)
- * That keeps the session cookie working, and lets axios copy the XSRF-TOKEN cookie into the
- * X-XSRF-TOKEN header that Spring Security checks on POST, PUT and DELETE.
- * Never put the backend's full https address here: cookies and CSRF would stop working.
+ * Common API configuration.
+ *
+ * All API requests use:
+ * https://sgmart-backend.onrender.com/api/v1
+ *
+ * Example:
+ * api.get('/products')
+ * becomes:
+ * https://sgmart-backend.onrender.com/api/v1/products
  */
 export const api = axios.create({
-  baseURL: 'https://sgmart-backend.onrender.com',
+  baseURL: 'https://sgmart-backend.onrender.com/api/v1',
   withCredentials: true,
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-XSRF-TOKEN',
-  // A sleeping backend on a small hosting plan can take a minute or more to wake up.
   timeout: 90000,
 })
 
-const WAKING_UP = 'SGMart is starting up. Please try again in a minute.'
+const WAKING_UP =
+  'SGMart is starting up. Please try again in a minute.'
 
+/** Convert backend and network errors into readable API errors. */
 export function toApiError(error: unknown): ApiError {
-  if (error instanceof ApiError) return error
+  if (error instanceof ApiError) {
+    return error
+  }
+
   if (axios.isAxiosError(error)) {
     const e = error as AxiosError<ApiErrorBody>
     const body = e.response?.data
-    if (e.response && body && typeof body === 'object' && 'code' in body) {
-      return new ApiError(e.response.status, body.code, body.message, body.field ?? null)
+
+    if (
+      e.response &&
+      body &&
+      typeof body === 'object' &&
+      'code' in body
+    ) {
+      return new ApiError(
+        e.response.status,
+        body.code,
+        body.message,
+        body.field ?? null,
+      )
     }
+
     const status = e.response?.status
+
     if (status === 401) {
-      return new ApiError(401, 'UNAUTHORIZED', 'Please sign in again.')
+      return new ApiError(
+        401,
+        'UNAUTHORIZED',
+        'Please sign in again.',
+      )
     }
+
     if (status === 403) {
-      return new ApiError(403, 'FORBIDDEN', "You don't have access to this. Refresh the page and try again.")
+      return new ApiError(
+        403,
+        'FORBIDDEN',
+        "You don't have access to this. Refresh the page and try again.",
+      )
     }
-    // The hosting proxy answers 502/503/504 while the backend is restarting or waking up.
+
+    // Backend restarting or waking up.
     if (status === 502 || status === 503 || status === 504) {
       return new ApiError(status, 'STARTING_UP', WAKING_UP)
     }
+
     if (e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT') {
       return new ApiError(0, 'TIMEOUT', WAKING_UP)
     }
+
     if (!e.response) {
-      return new ApiError(0, 'NETWORK', "Can't reach SGMart. Check your internet connection and try again.")
+      return new ApiError(
+        0,
+        'NETWORK',
+        "Can't reach SGMart. Check your internet connection and try again.",
+      )
     }
   }
-  return new ApiError(500, 'UNKNOWN', 'Something went wrong. Please try again.')
+
+  return new ApiError(
+    500,
+    'UNKNOWN',
+    'Something went wrong. Please try again.',
+  )
 }
 
+/** Handle all API errors in one place. */
 api.interceptors.response.use(
   (response) => response,
   (error) => Promise.reject(toApiError(error)),
