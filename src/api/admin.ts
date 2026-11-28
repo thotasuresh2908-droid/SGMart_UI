@@ -1,3 +1,4 @@
+
 import { api } from './client'
 import type {
   AdminOrderView, AdminProduct, AdminRole, AdminUserView, CreateProductRequest, CustomerAdminView, DeliverRequest,
@@ -5,9 +6,13 @@ import type {
   StockUpdateRequest, StoreInfo, UnavailableItem, UpdateProductRequest, UpdateStoreRequest,
 } from './types'
 
-/** Full-page redirect to Google; the backend brings admins back to /admin/orders (or /admin/login?error=...). */
+/**
+ * Full-page redirect to Google Admin Login.
+ * OAuth authentication starts directly on the backend domain.
+ */
 export const signInAdminWithGoogle = () => {
-  window.location.href = '/oauth2/authorization/google-admin'
+  window.location.href =
+    'https://sgmart-backend.onrender.com/oauth2/authorization/google-admin'
 }
 
 export const getAdminMe = () => api.get<AdminUserView>('/admin/me').then((r) => r.data)
@@ -104,4 +109,3 @@ export const blockCustomer = (customerId: number, reason: string) =>
 
 export const unblockCustomer = (customerId: number) =>
   api.post<CustomerAdminView>(`/admin/customers/${customerId}/unblock`).then((r) => r.data)
-
