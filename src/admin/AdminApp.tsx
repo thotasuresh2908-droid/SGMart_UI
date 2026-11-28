@@ -14,14 +14,14 @@ export default function AdminApp() {
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />
       <Route element={<AdminLayout />}>
-        <Route index element={<Navigate to="orders" replace />} />
+        <Route index element={<Navigate to="/admin/orders" replace />} />
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="stock" element={<StockPage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="partners" element={<PartnersPage />} />
         <Route path="payments" element={<PaymentsPage />} />
         <Route path="settings" element={<SettingsPage />} />
-        <Route path="*" element={<Navigate to="orders" replace />} />
+        <Route path="*" element={<Navigate to="/admin/orders" replace />} />
       </Route>
     </Routes>
   )
