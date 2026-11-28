@@ -42,4 +42,19 @@ describe('Admin access', () => {
     expect(screen.getByRole('link', { name: /Orders/ })).toHaveTextContent('2')
     expect(await screen.findByText('Open, 7 am to 11 pm')).toBeInTheDocument()
   })
+
+  it('side menu links always point to /admin/<section>, whatever page you are on', async () => {
+    vi.mocked(shop.getSession).mockResolvedValue({ type: 'ADMIN', id: 1, name: 'Store Owner', email: 'owner@gmail.com', role: 'OWNER' })
+    at('/admin/orders')
+    expect(await screen.findByRole('heading', { name: 'Orders' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Today/ })).toHaveAttribute('href', '/admin/stock')
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/admin/settings')
+  })
+
+  it('an unknown or piled-up admin address lands on the orders screen instead of growing forever', async () => {
+    vi.mocked(shop.getSession).mockResolvedValue({ type: 'ADMIN', id: 1, name: 'Store Owner', email: 'owner@gmail.com', role: 'OWNER' })
+    at('/admin/orders/stock/orders/orders/orders')
+    expect(await screen.findByRole('heading', { name: 'Orders' })).toBeInTheDocument()
+    expect(await screen.findByText('No orders here')).toBeInTheDocument()
+  })
 })
