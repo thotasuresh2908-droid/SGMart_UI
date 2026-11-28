@@ -1,5 +1,5 @@
-
 import { api } from './client'
+import { googleLoginUrl } from './config'
 import type {
   Category, ClaimResult, CustomerProfile, ItemRequest, OrderView, PageResult, PlaceOrderRequest,
   PlacedOrder, SessionInfo, ShopProduct, StoreInfo,
@@ -38,8 +38,7 @@ export const logout = () => api.post('/auth/logout').then(() => undefined)
  * can be maintained during the OAuth authorization flow.
  */
 export const continueWithGoogle = () => {
-  window.location.href =
-    'https://sgmart-backend.onrender.com/oauth2/authorization/google-customer'
+  window.location.href = googleLoginUrl('google-customer')
 }
 
 export const getProfile = () => api.get<CustomerProfile>('/me').then((r) => r.data)
