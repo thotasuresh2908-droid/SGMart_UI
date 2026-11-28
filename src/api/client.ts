@@ -1,14 +1,12 @@
- 
+
 import axios, { AxiosError } from 'axios'
 
-/** The one error shape the backend returns: { code, message, field }. */
 export interface ApiErrorBody {
   code: string
   message: string
   field?: string | null
 }
 
-/** Every failed API call becomes an ApiError with a message people can read. */
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -30,27 +28,24 @@ export class ApiError extends Error {
 
 /**
  * Common API configuration.
- *
- * All API requests use:
- * https://sgmart-backend.onrender.com/api/v1
- *
- * Example:
- * api.get('/products')
- * becomes:
- * https://sgmart-backend.onrender.com/api/v1/products
+ * All API requests use the Render backend.
  */
 export const api = axios.create({
   baseURL: 'https://sgmart-backend.onrender.com/api/v1',
   withCredentials: true,
+
   xsrfCookieName: 'XSRF-TOKEN',
   xsrfHeaderName: 'X-XSRF-TOKEN',
+
+  // Enable XSRF header handling for cross-origin requests.
+  withXSRFToken: true,
+
   timeout: 90000,
 })
 
 const WAKING_UP =
   'SGMart is starting up. Please try again in a minute.'
 
-/** Convert backend and network errors into readable API errors. */
 export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) {
     return error
@@ -88,11 +83,10 @@ export function toApiError(error: unknown): ApiError {
       return new ApiError(
         403,
         'FORBIDDEN',
-        "You don't have access to this. Refresh the page and try again.",
+        'Request rejected. Please refresh the page and try again.',
       )
     }
 
-    // Backend restarting or waking up.
     if (status === 502 || status === 503 || status === 504) {
       return new ApiError(status, 'STARTING_UP', WAKING_UP)
     }
@@ -117,7 +111,6 @@ export function toApiError(error: unknown): ApiError {
   )
 }
 
-/** Handle all API errors in one place. */
 api.interceptors.response.use(
   (response) => response,
   (error) => Promise.reject(toApiError(error)),
