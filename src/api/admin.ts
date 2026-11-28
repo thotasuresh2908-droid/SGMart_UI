@@ -1,5 +1,5 @@
-
 import { api } from './client'
+import { googleLoginUrl } from './config'
 import type {
   AdminOrderView, AdminProduct, AdminRole, AdminUserView, CreateProductRequest, CustomerAdminView, DeliverRequest,
   OrderCounts, OrderStatus, PageResult, PartnerRequest, PartnerView, PaymentReport, StockChangeResult, StockReport,
@@ -11,8 +11,7 @@ import type {
  * OAuth authentication starts directly on the backend domain.
  */
 export const signInAdminWithGoogle = () => {
-  window.location.href =
-    'https://sgmart-backend.onrender.com/oauth2/authorization/google-admin'
+  window.location.href = googleLoginUrl('google-admin')
 }
 
 export const getAdminMe = () => api.get<AdminUserView>('/admin/me').then((r) => r.data)
