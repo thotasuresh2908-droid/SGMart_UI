@@ -22,12 +22,12 @@ function hour(t: string | undefined): string {
 }
 
 const NAV = [
-  { to: 'orders', label: 'Orders' },
-  { to: 'stock', label: 'Today’s stock' },
-  { to: 'products', label: 'Products' },
-  { to: 'partners', label: 'Delivery partners' },
-  { to: 'payments', label: 'Payments' },
-  { to: 'settings', label: 'Settings' },
+  { to: '/admin/orders', label: 'Orders' },
+  { to: '/admin/stock', label: 'Today’s stock' },
+  { to: '/admin/products', label: 'Products' },
+  { to: '/admin/partners', label: 'Delivery partners' },
+  { to: '/admin/payments', label: 'Payments' },
+  { to: '/admin/settings', label: 'Settings' },
 ]
 
 /** Admin shell: checks the session, side menu with counts, live new-order alerts with an optional chime. */
@@ -111,7 +111,7 @@ export function AdminLayout() {
             {NAV.map((n) => (
               <NavLink key={n.to} to={n.to} className={({ isActive }) => `tab${isActive ? ' active' : ''}`}>
                 <span>{n.label}</span>
-                {n.to === 'orders' && newOrders > 0 ? <span className="badge-n">{newOrders}</span> : null}
+                {n.to === '/admin/orders' && newOrders > 0 ? <span className="badge-n">{newOrders}</span> : null}
               </NavLink>
             ))}
             <button type="button" className="reset" onClick={signOut}>Sign out</button>
