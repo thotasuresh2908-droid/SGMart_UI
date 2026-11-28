@@ -1,3 +1,4 @@
+
 import { api } from './client'
 import type {
   Category, ClaimResult, CustomerProfile, ItemRequest, OrderView, PageResult, PlaceOrderRequest,
@@ -31,9 +32,14 @@ export const getSession = () => api.get<SessionInfo>('/auth/session').then((r) =
 
 export const logout = () => api.post('/auth/logout').then(() => undefined)
 
-/** Full-page redirect to Google; the backend brings the shopper back to /?signed_in=1. */
+/**
+ * Full-page redirect to Google Customer Login.
+ * Start OAuth directly on the backend domain so the backend session
+ * can be maintained during the OAuth authorization flow.
+ */
 export const continueWithGoogle = () => {
-  window.location.href = '/oauth2/authorization/google-customer'
+  window.location.href =
+    'https://sgmart-backend.onrender.com/oauth2/authorization/google-customer'
 }
 
 export const getProfile = () => api.get<CustomerProfile>('/me').then((r) => r.data)
